@@ -17,19 +17,39 @@ export async function fetchDoctors(): Promise<Doctor[]> {
       }
       const apiData: Doctor[] = await response.json();
       
-      // Insert the data into Supabase
+      // Insert the data into Supabase with correct field mapping
       const { error } = await supabase
         .from('doctors')
         .insert(apiData.map(doctor => ({
-          ...doctor,
-          specialty: Array.isArray(doctor.specialty) ? doctor.specialty : [doctor.specialty]
+          id: doctor.id,
+          name: doctor.name,
+          specialty: Array.isArray(doctor.specialty) ? doctor.specialty : [doctor.specialty],
+          fee: doctor.fee,
+          city: doctor.city,
+          clinic_name: doctor.clinicName,
+          experience: doctor.experience,
+          photo: doctor.photo,
+          video_consult: doctor.videoConsult,
+          in_clinic: doctor.inClinic
         })));
         
       if (error) throw error;
       return apiData;
     }
 
-    return existingDoctors || [];
+    // Convert Supabase data structure to match our Doctor type
+    return (existingDoctors || []).map(doctor => ({
+      id: doctor.id,
+      name: doctor.name,
+      specialty: doctor.specialty,
+      fee: doctor.fee,
+      city: doctor.city,
+      clinicName: doctor.clinic_name,
+      experience: doctor.experience,
+      photo: doctor.photo || "",
+      videoConsult: doctor.video_consult || false,
+      inClinic: doctor.in_clinic || false
+    }));
   } catch (error) {
     console.error("Error fetching doctors:", error);
     return [];
